@@ -1,8 +1,14 @@
-# Use Nginx to serve static files
-FROM nginx:alpine
+FROM node:18
 
-# Copy built app
-COPY build /usr/share/nginx/html
+WORKDIR /app
 
-# Add custom nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]
