@@ -1,26 +1,10 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
+import { writeFile } from 'fs/promises';
+import { join } from 'path';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const dataDir = process.env.DATA_PATH || '/app/data';
 
-// Middleware
-app.use(express.static('dist'));
-app.use(express.json());
-
-// Example API: Save JSON
-app.post('/api/save', (req, res) => {
-  const data = req.body;
-  fs.writeFileSync('./data/store.json', JSON.stringify(data, null, 2));
-  res.json({ status: 'ok' });
-});
-
-// SPA fallback
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve('dist', 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Zapadoo is live on http://localhost:${PORT}`);
-});
+export async function POST({ request }) {
+  const data = await request.json();
+  await writeFile(join(dataDir, 'data.json'), JSON.stringify(data, null, 2));
+  return new Response('Success', { status: 200 });
+}

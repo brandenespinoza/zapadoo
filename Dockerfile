@@ -1,14 +1,23 @@
-FROM node:18
-
+# Stage 1: Build
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-
 RUN npm run build
 
+# Stage 2: Run
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
+# Copy the data directory
+COPY --from=builder /app/data ./data
+RUN npm ci --production
+# Set permissions for the data directory
+RUN chown -R node:node /app/data
+USER node
 EXPOSE 3000
-
-CMD ["npm", "run", "start"]
+ENV DATA_PATH=/app/data
+CMD ["node", "build"]
