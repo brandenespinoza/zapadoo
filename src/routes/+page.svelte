@@ -8,7 +8,7 @@
   let kids = [];
 
   onMount(async () => {
-    // Make sure loadJSON reads from 'static/data/users.json'
+    // Make sure loadJSON reads from 'data/users.json'
     const allUsers = await loadJSON('users.json');
     users.set(allUsers);
     parents = allUsers.filter(u => u.role === 'parent');
