@@ -1,0 +1,27 @@
+[
+  {
+    "id": "user_parent_001",
+    "name": "Big Bad Dad",
+    "role": "parent"
+  },
+  {
+    "id": "user_parent_002",
+    "name": "Sexy Mama",
+    "role": "parent"
+  },
+  {
+    "id": "user_child_001",
+    "name": "Isla",
+    "role": "child"
+  },
+  {
+    "id": "user_child_002",
+    "name": "Hobie",
+    "role": "child"
+  },
+  {
+    "id": "user_child_003",
+    "name": "Brisa",
+    "role": "child"
+  }
+]
