@@ -7,4 +7,3 @@ public
 .git
 .gitignore
 Dockerfile
-nginx.conf
