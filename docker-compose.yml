@@ -1,9 +1,7 @@
 services:
   zapadoo:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/brandenespinoza/zapadoo:latest
+    container_name: zapadoo
     ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
+      - "3000:80"
+    restart: unless-stopped

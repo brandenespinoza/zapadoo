@@ -1,0 +1,10 @@
+node_modules
+src
+public
+.vscode
+*.md
+*.log
+.git
+.gitignore
+Dockerfile
+nginx.conf
