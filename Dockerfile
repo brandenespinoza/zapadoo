@@ -5,7 +5,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY src ./src
 COPY data ./data
-COPY svelte.config.js tsconfig.json vite.config.js ./
+COPY svelte.config.js tsconfig.json ./
+# Copy vite.config.js only if it exists
+COPY vite.config.js* ./
 RUN npm run build
 
 # Stage 2: Run

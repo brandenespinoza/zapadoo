@@ -1,26 +1,27 @@
-import fs from 'fs/promises';
-import path from 'path';
+import { json, error } from '@sveltejs/kit';
+import { writeFile, readFile } from 'fs/promises';
+import { join } from 'path';
 
-const JOBS_PATH = path.resolve('static/data/jobs.json');
+const JOBS_PATH = join(process.env.DATA_PATH || '/app/data', 'jobs.json');
 
 // Helper function to read jobs.json
 async function readJobs() {
-  const data = await fs.readFile(JOBS_PATH, 'utf-8');
+  const data = await readFile(JOBS_PATH, 'utf-8');
   return JSON.parse(data);
 }
 
 // Helper function to write to jobs.json
 async function writeJobs(jobs: any[]) {
-  await fs.writeFile(JOBS_PATH, JSON.stringify(jobs, null, 2));
+  await writeFile(JOBS_PATH, JSON.stringify(jobs, null, 2));
 }
 
 // GET: Fetch all jobs
 export const GET = async () => {
   try {
     const jobs = await readJobs();
-    return new Response(JSON.stringify(jobs), { status: 200 });
-  } catch (error) {
-    return new Response('Failed to read jobs.json', { status: 500 });
+    return json(jobs, { status: 200 });
+  } catch (err) {
+    throw error(500, 'Failed to read jobs.json');
   }
 };
 
@@ -35,9 +36,9 @@ export const POST = async ({ request }: { request: Request }) => {
     jobs.push(newJob);
 
     await writeJobs(jobs);
-    return new Response(JSON.stringify(newJob), { status: 201 });
-  } catch (error) {
-    return new Response('Failed to add job', { status: 500 });
+    return json(newJob, { status: 201 });
+  } catch (err) {
+    throw error(500, 'Failed to add job');
   }
 };
 
@@ -50,9 +51,9 @@ export const DELETE = async ({ request }: { request: Request }) => {
     const updatedJobs = jobs.filter((job: { id: string }) => job.id !== id);
     await writeJobs(updatedJobs);
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
-  } catch (error) {
-    return new Response('Failed to delete job', { status: 500 });
+    return json({ success: true }, { status: 200 });
+  } catch (err) {
+    throw error(500, 'Failed to delete job');
   }
 };
 
@@ -64,15 +65,14 @@ export const PUT = async ({ request }: { request: Request }) => {
 
     const index = jobs.findIndex((job: { id: string }) => job.id === updatedJob.id);
     if (index === -1) {
-      return new Response('Job not found', { status: 404 });
+      throw error(404, 'Job not found');
     }
 
     jobs[index] = updatedJob;
     await writeJobs(jobs);
 
-    return new Response(JSON.stringify(updatedJob), { status: 200 });
-  } catch (error) {
-    return new Response('Failed to update job', { status: 500 });
+    return json(updatedJob, { status: 200 });
+  } catch (err) {
+    throw error(500, 'Failed to update job');
   }
 };
-
