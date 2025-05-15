@@ -1,8 +1,8 @@
 node_modules
-public
 .vscode
 *.md
 *.log
 .git
 .gitignore
-Dockerfile
+.svelte-kit
+.env
