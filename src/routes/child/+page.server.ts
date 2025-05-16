@@ -1,4 +1,4 @@
-import { loadJSON } from '\$lib/utils/jsonStorage';
+import { loadJSON } from '$lib/utils/jsonStorage';
 
 export async function load() {
   const jobs = await loadJSON('jobs.json');
