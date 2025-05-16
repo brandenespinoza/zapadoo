@@ -16,11 +16,11 @@ WORKDIR /app
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
-COPY --from=builder /app/data ./data
 RUN npm ci --production
-# Set permissions for the data directory
-RUN chown -R node:node /app/data
+# Set permissions for the data directory (will be mounted at runtime)
+RUN mkdir -p /app/data && chown -R node:node /app/data
 USER node
 EXPOSE 3000
+ENV NODE_ENV=production
 ENV DATA_PATH=/app/data
 CMD ["node", "build"]

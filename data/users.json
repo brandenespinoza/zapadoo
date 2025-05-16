@@ -1,12 +1,12 @@
 [
   {
     "id": "user_parent_001",
-    "name": "Big Bad Dad",
+    "name": "Dad",
     "role": "parent"
   },
   {
     "id": "user_parent_002",
-    "name": "Sexy Mama",
+    "name": "Mom",
     "role": "parent"
   },
   {
@@ -20,8 +20,13 @@
     "role": "child"
   },
   {
-    "id": "user_child_003",
     "name": "Brisa",
-    "role": "child"
+    "role": "child",
+    "id": "1"
+  },
+  {
+    "name": "DoDo",
+    "role": "child",
+    "id": "2"
   }
 ]

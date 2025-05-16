@@ -40,11 +40,11 @@
     user.set(u);
   });
 
-  function updateJobs(jobData: any[]) {
-    jobs.set(jobData);
-    availableJobs = jobData.filter(j => j.status === 'open');
-    completedJobs = jobData.filter(j => j.status === 'pending' || j.status === 'paid');
-  }
+function updateJobs(jobData: any[]) {
+  jobs.set(jobData);
+  availableJobs = jobData.filter(j => j.status === 'open');
+  completedJobs = jobData.filter(j => j.status === 'inreview' || j.status === 'paid');
+}
 
   onMount(() => {
     updateJobs(data.jobs);
@@ -91,32 +91,43 @@
     }
   }
 
-  async function createJob() {
-    newJob.status = 'open';
-    newJob.child_id = '';
-    const user = get(currentUser);
-    newJob.parent_id = user?.id || '';    
-    const response = await fetch('/api/jobs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newJob)
-    });
-    if (!response.ok) {
-      console.error('Failed to create job:', await response.text());
-      return;
-    }
-    newJob = {
-      title: '',
-      description: '',
-      reward_usd: 0,
-      status: '',
-      child_id: '',
-      parent_id: user?.id || ''
-    };
-    showCreateForm = false;
-    const updatedJobs = await (await fetch('/api/jobs')).json();
-    updateJobs(updatedJobs);
+ async function createJob() {
+  newJob.status = 'open';
+  newJob.child_id = '';
+  const user = get(currentUser);
+  newJob.parent_id = user?.id || '';
+  // Always assign a string id
+  newJob.id = Date.now().toString();
+  const response = await fetch('/api/jobs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newJob)
+  });
+  if (!response.ok) {
+    console.error('Failed to create job:', await response.text());
+    return;
   }
+  newJob = {
+    title: '',
+    description: '',
+    reward_usd: 0,
+    status: '',
+    child_id: '',
+    parent_id: user?.id || ''
+  };
+  showCreateForm = false;
+  const updatedJobs = await (await fetch('/api/jobs')).json();
+  updateJobs(updatedJobs);
+}
+async function deleteAllPaidJobs() {
+  await fetch('/api/jobs', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deleteAllPaid: true })
+  });
+  const updatedJobs = await (await fetch('/api/jobs')).json();
+  updateJobs(updatedJobs);
+}
 </script>
 
 <div class="px-4 py-8 max-w-4xl mx-auto font-sans">
@@ -141,7 +152,7 @@
     </button>
   </div>
   <div>
-    <h2 class="text-xl font-semibold mb-4 mt-6">Available Jobs</h2>
+    <h1 class="text-xl font-bold mb-4 mt-6 text-center text-blue-600">Available Jobs</h1>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
       {#each availableJobs as job}
         <div class="border border-gray-400 rounded-lg p-4 flex flex-col">
@@ -153,7 +164,7 @@
           <div class="flex justify-between items-center font-bold text-sm mt-auto">
             <span class="text-gray-600">
               {#if job.parent_id}
-                {data.users.find(user => user.id === job.parent_id)?.name ?? 'Unassigned'}
+                By: {data.users.find(user => user.id === job.parent_id)?.name ?? 'Unassigned'}
               {:else}
                 Unassigned
               {/if}
@@ -238,9 +249,9 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold mb-4 mt-6">Recent Completed Jobs</h2>
+    <h1 class="text-xl font-bold mb-4 mt-6 text-center text-blue-600">Recently Completed Jobs</h1>
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {#each completedJobs as job}
+      {#each completedJobs.filter(job => job.status === 'inreview') as job}
         <div class="border border-gray-400 rounded-lg p-4 flex flex-col">
           <div class="flex justify-between font-bold mb-2">
             <span>{job.title}</span>
@@ -255,29 +266,59 @@
                 No child assigned
               {/if}
             </span>
-            {#if job.status === 'pending'}
-              <div>
-                <button
-                  class="text-red-600 hover:underline mr-2"
-                  on:click={() => rejectJob(job.id)}
-                  on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') rejectJob(job.id); }}
-                >
-                  REJECT
-                </button>
-                <button
-                  class="text-green-600 hover:underline"
-                  on:click={() => markAsPaid(job.id)}
-                  on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') markAsPaid(job.id); }}
-                >
-                  PAY
-                </button>
-              </div>
-            {:else if job.status === 'paid'}
-              <span class="text-blue-600">PAID</span>
-            {/if}
+            <div>
+              <button
+                class="text-red-600 hover:underline mr-2"
+                on:click={() => rejectJob(job.id)}
+                on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') rejectJob(job.id); }}
+              >
+                REJECT
+              </button>
+              <button
+                class="text-green-600 hover:underline"
+                on:click={() => markAsPaid(job.id)}
+                on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') markAsPaid(job.id); }}
+              >
+                PAY
+              </button>
+            </div>
           </div>
         </div>
       {/each}
     </div>
   </div>
+
+  <div>
+    <h1 class="text-xl font-bold mb-4 mt-6 text-center text-blue-600">Paid Jobs</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {#each completedJobs.filter(job => job.status === 'paid') as job}
+        <div class="border border-gray-400 rounded-lg p-4 flex flex-col">
+          <div class="flex justify-between font-bold mb-2">
+            <span>{job.title}</span>
+            <span>${job.reward_usd}</span>
+          </div>
+          <p class="text-sm text-gray-700 mb-2">{job.description}</p>
+          <div class="flex justify-between items-center font-bold text-sm mt-auto">
+            <span class="text-gray-600">
+              {#if job.child_id}
+                {data.users.find(user => user.id === job.child_id)?.name ?? 'No child assigned'}
+              {:else}
+                No child assigned
+              {/if}
+            </span>
+            <span class="text-blue-600">PAID</span>
+          </div>
+        </div>
+      {/each}
+    </div>
+  </div>
+  <button
+    class="fixed bottom-6 right-6 z-50 bg-red-100 text-white border border-red-200 rounded-full w-4 h-4 flex items-center justify-center hover:bg-red-200 transition"
+    aria-label="Purge All Paid Jobs"
+    title="Purge All Paid Jobs"
+    on:click={deleteAllPaidJobs}
+    on:keydown={(e) => { if (e.key === 'Enter' || e.key === ' ') deleteAllPaidJobs(); }}
+  >
+  </button>
+
 </div>
